@@ -1,11 +1,13 @@
 "use client";
 
+import { createPlatform } from "@/lib/actions/(platforms)/create-platform";
 import { fetchPlatforms } from "@/lib/actions/(platforms)/fetch-platforms";
-import { Check, Plus, X } from "lucide-react";
+import { Check, Loader, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function PlatformsPage() {
   const [platforms, setPlatforms] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchPlatforms().then((data) => {
@@ -28,14 +30,19 @@ export default function PlatformsPage() {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    setLoading(true);
     const newPlatform = {
       ...formData,
-      created_at: new Date().toISOString(),
     };
-    setPlatforms((prev) => [...prev, newPlatform]);
-    setFormData({ name: "", short_name: "", is_active: false });
+    try {
+      const response = await createPlatform(newPlatform);
+      setPlatforms((prev) => [...prev, newPlatform]);
+      setFormData({ name: "", short_name: "", is_active: false });
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -176,8 +183,14 @@ export default function PlatformsPage() {
                 onClick={handleSubmit}
                 className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
               >
-                <Plus className="w-5 h-5" />
-                Add Platform
+                {loading ? (
+                  <Loader className="animate-spin stroke-1" />
+                ) : (
+                  <>
+                    <Plus className="w-5 h-5" />
+                    Add Platform
+                  </>
+                )}
               </button>
             </div>
           </div>
